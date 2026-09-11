@@ -1,0 +1,11 @@
+# macOS
+.DS_Store
+
+# Editores
+.idea/
+.vscode/
+*.swp
+
+# Dependencias y build (el juego no necesita ninguna)
+node_modules/
+package-lock.json
