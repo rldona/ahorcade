@@ -106,7 +106,7 @@ La racha solo aumenta al ganar **sin usar pistas**. Los récords se guardan siem
 ## Estructura del proyecto
 
 ```
-juego-ahorcado/
+ahorcade/
 ├── index.html                 # Estructura, SVG del personaje y diálogos
 ├── styles.css                 # Tema neón, layout responsive y animaciones
 ├── script.js                  # Motor del juego, sonido y estado
