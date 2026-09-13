@@ -22,7 +22,7 @@
 
 </div>
 
-![Captura de la pantalla de inicio de AHORCADE](assets/cover.png)
+![Captura de una partida de AHORCADE](assets/cover.jpg)
 
 ## Índice
 
@@ -111,7 +111,7 @@ ahorcade/
 ├── styles.css                 # Tema neón, layout responsive y animaciones
 ├── script.js                  # Motor del juego, sonido y estado
 ├── assets/
-│   └── cover.png              # Captura usada en este README
+│   └── cover.jpg              # Captura usada en este README
 ├── .github/
 │   └── workflows/
 │       └── ci.yml             # Validación de HTML y JavaScript

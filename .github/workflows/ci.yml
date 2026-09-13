@@ -24,7 +24,7 @@ jobs:
 
       - name: Comprobar ficheros requeridos
         run: |
-          for file in index.html styles.css script.js assets/cover.png; do
+          for file in index.html styles.css script.js assets/cover.jpg; do
             if [ ! -f "$file" ]; then
               echo "::error::Falta el fichero requerido: $file"
               exit 1
