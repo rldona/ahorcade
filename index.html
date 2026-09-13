@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#070b18">
+  <meta name="description" content="AHORCADE: adivina la palabra y salva al bicho antes de que la cuerda diga basta.">
+  <title>AHORCADE · Arcade de palabras</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+
+  <!-- ============ FONDO DECORATIVO ============ -->
+  <div class="bg" aria-hidden="true">
+    <div class="bg__grid"></div>
+    <div class="bg__orb bg__orb--a"></div>
+    <div class="bg__orb bg__orb--b"></div>
+    <div class="bg__orb bg__orb--c"></div>
+    <div class="bg__noise"></div>
+  </div>
+
+  <div class="vignette" id="vignette" aria-hidden="true"></div>
+  <div class="confetti" id="confetti" aria-hidden="true"></div>
+  <div class="streak-fx" id="streakFx" aria-hidden="true"><span id="streakFxText">RACHA x3</span></div>
+
+  <!-- ============ SPRITE DE ICONOS ============ -->
+  <svg class="sprite" aria-hidden="true" focusable="false">
+    <symbol id="i-sound-on" viewBox="0 0 24 24">
+      <path d="M4 9.5v5a1 1 0 0 0 1 1h3l4.2 3.4a.8.8 0 0 0 1.3-.6V5.7a.8.8 0 0 0-1.3-.6L8 8.5H5a1 1 0 0 0-1 1Z" fill="currentColor"/>
+      <path d="M15.6 9a4.2 4.2 0 0 1 0 6M18.4 6.2a8 8 0 0 1 0 11.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-sound-off" viewBox="0 0 24 24">
+      <path d="M4 9.5v5a1 1 0 0 0 1 1h3l4.2 3.4a.8.8 0 0 0 1.3-.6V5.7a.8.8 0 0 0-1.3-.6L8 8.5H5a1 1 0 0 0-1 1Z" fill="currentColor"/>
+      <path d="M15.5 9.5l5 5M20.5 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-restart" viewBox="0 0 24 24">
+      <path d="M20 12a8 8 0 1 1-2.4-5.7" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+      <path d="M20 4.5V10h-5.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="i-bulb" viewBox="0 0 24 24">
+      <path d="M12 3.5a6 6 0 0 1 3.8 10.6c-.6.5-.8 1.2-.8 2H9c0-.8-.2-1.5-.8-2A6 6 0 0 1 12 3.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+      <path d="M9.8 19h4.4M10.8 21.5h2.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24">
+      <path d="M4.5 12h15M13.5 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="i-flame" viewBox="0 0 24 24">
+      <path d="M12 2.8s5.6 5.2 5.6 9.6a5.6 5.6 0 0 1-11.2 0c0-1.7.6-3.1 1.6-4.4C9.4 6.4 12 2.8 12 2.8Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+      <path d="M12 20.8c-1.8 0-3.2-1.3-3.2-3 0-1.9 2.2-3.5 3.2-5 1 1.5 3.2 3.1 3.2 5 0 1.7-1.4 3-3.2 3Z" fill="currentColor" opacity=".85"/>
+    </symbol>
+    <symbol id="i-trophy" viewBox="0 0 24 24">
+      <path d="M8 4h8v4.2a4 4 0 0 1-8 0V4Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+      <path d="M8 5.5H5.4a.9.9 0 0 0-.9.9c0 2.2 1.4 3.7 3.6 4M16 5.5h2.6a.9.9 0 0 1 .9.9c0 2.2-1.4 3.7-3.6 4M12 12.2V16M8.5 19.5h7M10 16.5h4l.8 3h-5.6l.8-3Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+  </svg>
+
+  <!-- ============ APP ============ -->
+  <div class="app" id="app">
+
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand__dot" aria-hidden="true"></span>
+        <span class="brand__text">
+          <strong>AHORCADE</strong>
+          <small>Arcade de palabras</small>
+        </span>
+      </div>
+
+      <div class="topbar__actions">
+        <button class="icon-btn" id="soundBtn" type="button" aria-pressed="true" aria-label="Desactivar sonido" title="Sonido">
+          <svg class="icon icon--on" aria-hidden="true"><use href="#i-sound-on"></use></svg>
+          <svg class="icon icon--off" aria-hidden="true"><use href="#i-sound-off"></use></svg>
+        </button>
+        <button class="btn btn--ghost btn--compact" id="newGameBtn" type="button">
+          <svg class="icon" aria-hidden="true"><use href="#i-restart"></use></svg>
+          <span>Nueva partida</span>
+        </button>
+      </div>
+    </header>
+
+    <section class="hero" aria-labelledby="gameTitle">
+      <p class="hero__kicker">Arcade de palabras · Edición neón</p>
+      <h1 class="hero__title" id="gameTitle">Ahorcade</h1>
+      <p class="hero__sub">Salva al bicho antes de que la cuerda diga basta.</p>
+    </section>
+
+    <main class="game">
+
+      <section class="stats" aria-label="Información de la partida">
+        <div class="stat">
+          <span class="stat__label">Puntos</span>
+          <strong class="stat__value stat__value--score" id="scoreVal">0</strong>
+        </div>
+        <div class="stat stat--streak" id="streakStat">
+          <span class="stat__label">
+            <svg class="icon icon--flame" aria-hidden="true"><use href="#i-flame"></use></svg>
+            Racha
+          </span>
+          <strong class="stat__value" id="streakVal">0</strong>
+        </div>
+        <div class="stat">
+          <span class="stat__label">
+            <svg class="icon" aria-hidden="true"><use href="#i-trophy"></use></svg>
+            Récord
+          </span>
+          <strong class="stat__value" id="bestVal">0</strong>
+        </div>
+        <div class="stat stat--best">
+          <span class="stat__label">Mejor racha</span>
+          <strong class="stat__value" id="bestStreakVal">0</strong>
+        </div>
+      </section>
+
+      <section class="board card" id="board" aria-label="Zona de juego">
+        <div class="board__stage">
+          <!-- Personaje del ahorcado: SVG inline, sin recursos externos -->
+          <div class="board__figure">
+            <svg class="hangman" id="hangman" viewBox="0 0 260 300" width="260" height="300" role="img" aria-labelledby="hangmanTitle" data-mood="ok">
+              <title id="hangmanTitle">Bicho colgado de una cuerda</title>
+              <defs>
+                <linearGradient id="gStructure" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="#33406f"/>
+                  <stop offset="1" stop-color="#1a2144"/>
+                </linearGradient>
+                <linearGradient id="gBody" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="#fbfaff"/>
+                  <stop offset="1" stop-color="#d9cfff"/>
+                </linearGradient>
+                <radialGradient id="gGround" cx="50%" cy="50%" r="50%">
+                  <stop offset="0" stop-color="#8b7bff" stop-opacity=".32"/>
+                  <stop offset="1" stop-color="#8b7bff" stop-opacity="0"/>
+                </radialGradient>
+                <radialGradient id="gAura" cx="50%" cy="50%" r="50%">
+                  <stop offset="0" stop-color="#ff5d73" stop-opacity=".20"/>
+                  <stop offset="1" stop-color="#ff5d73" stop-opacity="0"/>
+                </radialGradient>
+              </defs>
+
+              <ellipse class="hangman__aura" cx="152" cy="165" rx="128" ry="128" fill="url(#gAura)"/>
+              <ellipse class="hangman__ground" cx="150" cy="281" rx="98" ry="12" fill="url(#gGround)"/>
+
+              <g class="hangman__prompt" aria-hidden="true">
+                <text x="160" y="200" text-anchor="middle">?</text>
+              </g>
+
+              <g class="part part--structure" data-part="1">
+                <rect x="36" y="264" width="128" height="16" rx="8" fill="url(#gStructure)" stroke="rgba(255,255,255,.10)"/>
+                <rect x="45" y="73" width="15" height="196" rx="7.5" fill="url(#gStructure)" stroke="rgba(255,255,255,.08)"/>
+                <rect x="45" y="73" width="123" height="15" rx="7.5" fill="url(#gStructure)" stroke="rgba(255,255,255,.08)"/>
+                <path d="M58 150 L100 88" fill="none" stroke="#2b3560" stroke-width="9" stroke-linecap="round"/>
+                <path d="M58 148 L98 89" fill="none" stroke="#4a5a9e" stroke-width="3" stroke-linecap="round" opacity=".7"/>
+                <path class="hangman__rope" d="M160 88 V99" fill="none" stroke="#ffc857" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="5 5"/>
+                <circle cx="160" cy="102" r="5.5" fill="#ffc857"/>
+              </g>
+
+              <g class="hangman__figure" id="figure">
+                <g class="part part--leg part--leg--l" data-part="6">
+                  <path d="M152 222 C 151 232, 150 240, 149 246" fill="none" stroke="#d9cfff" stroke-width="9" stroke-linecap="round"/>
+                  <ellipse cx="146" cy="250" rx="8.5" ry="5" fill="#fbfaff"/>
+                </g>
+                <g class="part part--leg part--leg--r" data-part="7">
+                  <path d="M168 222 C 169 232, 170 240, 171 246" fill="none" stroke="#d9cfff" stroke-width="9" stroke-linecap="round"/>
+                  <ellipse cx="174" cy="250" rx="8.5" ry="5" fill="#fbfaff"/>
+                </g>
+                <g class="part part--arm part--arm--l" data-part="4">
+                  <path d="M142 184 C 128 164, 130 126, 151 109" fill="none" stroke="#d9cfff" stroke-width="9" stroke-linecap="round"/>
+                  <circle cx="152" cy="107" r="6.5" fill="#fbfaff"/>
+                </g>
+                <g class="part part--arm part--arm--r" data-part="5">
+                  <path d="M178 184 C 192 164, 190 126, 169 109" fill="none" stroke="#d9cfff" stroke-width="9" stroke-linecap="round"/>
+                  <circle cx="168" cy="107" r="6.5" fill="#fbfaff"/>
+                </g>
+                <g class="part part--body" data-part="3">
+                  <rect x="137" y="168" width="46" height="60" rx="23" fill="url(#gBody)"/>
+                  <path d="M147 202 q 13 9 26 0" fill="none" stroke="#c9b8f5" stroke-width="3" stroke-linecap="round" opacity=".65"/>
+                </g>
+                <g class="part part--head" data-part="2">
+                  <path d="M147 120 q -9 -14 1 -18 q 8 -3 7 9" fill="url(#gBody)" stroke="#c9b8f5" stroke-width="2.5" stroke-linejoin="round"/>
+                  <circle cx="131" cy="149" r="6" fill="#efe9ff"/>
+                  <circle cx="189" cy="149" r="6" fill="#efe9ff"/>
+                  <circle cx="160" cy="146" r="30" fill="url(#gBody)"/>
+                  <g class="face">
+                    <g class="face__eyes face__eyes--open">
+                      <ellipse cx="150" cy="142" rx="8" ry="8.5" fill="#ffffff"/>
+                      <ellipse cx="170" cy="142" rx="8" ry="8.5" fill="#ffffff"/>
+                      <circle class="pupil" cx="151" cy="143.5" r="4" fill="#1b2140"/>
+                      <circle class="pupil" cx="171" cy="143.5" r="4" fill="#1b2140"/>
+                      <circle cx="149.5" cy="140.5" r="1.7" fill="#ffffff"/>
+                      <circle cx="169.5" cy="140.5" r="1.7" fill="#ffffff"/>
+                    </g>
+                    <g class="face__eyes face__eyes--happy">
+                      <path d="M142 144 q 8 -10 16 0" fill="none" stroke="#1b2140" stroke-width="3.4" stroke-linecap="round"/>
+                      <path d="M162 144 q 8 -10 16 0" fill="none" stroke="#1b2140" stroke-width="3.4" stroke-linecap="round"/>
+                    </g>
+                    <g class="face__eyes face__eyes--dead">
+                      <path d="M144 136 l13 12 M157 136 l-13 12" fill="none" stroke="#1b2140" stroke-width="3.4" stroke-linecap="round"/>
+                      <path d="M163 136 l13 12 M176 136 l-13 12" fill="none" stroke="#1b2140" stroke-width="3.4" stroke-linecap="round"/>
+                    </g>
+                    <g class="face__brows">
+                      <path class="brow brow--l" d="M142 129 L155 132" fill="none" stroke="#1b2140" stroke-width="2.6" stroke-linecap="round"/>
+                      <path class="brow brow--r" d="M165 132 L178 129" fill="none" stroke="#1b2140" stroke-width="2.6" stroke-linecap="round"/>
+                    </g>
+                    <ellipse class="blush" cx="137" cy="156" rx="7" ry="4.5" fill="#ff8fa3" opacity=".55"/>
+                    <ellipse class="blush" cx="183" cy="156" rx="7" ry="4.5" fill="#ff8fa3" opacity=".55"/>
+                    <path class="mouth mouth--happy" d="M151 157 Q160 167 169 157" fill="none" stroke="#1b2140" stroke-width="3" stroke-linecap="round"/>
+                    <path class="mouth mouth--neutral" d="M153 162 Q160 157 167 162" fill="none" stroke="#1b2140" stroke-width="3" stroke-linecap="round"/>
+                    <ellipse class="mouth mouth--worry" cx="160" cy="163" rx="4.5" ry="5.5" fill="#1b2140"/>
+                    <ellipse class="mouth mouth--scared" cx="160" cy="164" rx="7.5" ry="9.5" fill="#1b2140"/>
+                    <path class="mouth mouth--dead" d="M151 162 q 4.5 6 9 0 q 4.5 -6 9 0" fill="none" stroke="#1b2140" stroke-width="2.8" stroke-linecap="round"/>
+                    <path class="sweat" d="M192 124 c 7 9 7 14 0 16 c -7 -2 -7 -7 0 -16" fill="#7cd6ff"/>
+                  </g>
+                </g>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <div class="board__play">
+          <div class="board__meta">
+            <span class="chip" id="categoryChip">Aleatorio</span>
+            <span class="lives" id="livesEl">
+              <span class="lives__pips" id="livesPips" aria-hidden="true"></span>
+              <span class="lives__text" id="livesText">Fallos 0/7</span>
+            </span>
+          </div>
+
+          <div class="word" id="wordEl" aria-label="Palabra oculta"></div>
+
+          <div class="progress" role="progressbar" aria-label="Progreso de la palabra" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <span class="progress__bar" id="progressBar"></span>
+          </div>
+
+          <p class="toast" id="toastEl" role="status" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <section class="controls card" aria-label="Controles y teclado">
+        <div class="controls__actions">
+          <button class="btn btn--soft btn--compact" id="hintBtn" type="button">
+            <svg class="icon" aria-hidden="true"><use href="#i-bulb"></use></svg>
+            <span>Pista</span>
+            <em class="btn__cost" id="hintCost">-75</em>
+          </button>
+          <button class="btn btn--soft btn--compact" id="skipBtn" type="button">
+            <svg class="icon" aria-hidden="true"><use href="#i-restart"></use></svg>
+            <span>Otra palabra</span>
+          </button>
+          <p class="controls__hint">Teclado físico activado</p>
+        </div>
+
+        <div class="keyboard" id="keyboardEl" aria-label="Teclado virtual"></div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>Adivina la palabra antes de agotar los 7 intentos. Bonus por pocos fallos y por racha.</p>
+    </footer>
+  </div>
+
+  <!-- ============ DIÁLOGOS ============ -->
+  <dialog class="dialog" id="welcomeDialog" aria-labelledby="welcomeTitle">
+    <div class="dialog__body dialog__body--welcome">
+      <p class="dialog__kicker">¿Listo para el reto?</p>
+      <h2 class="dialog__title" id="welcomeTitle">Elige categoría</h2>
+      <p class="dialog__text">Tienes <strong>7 intentos</strong> para salvar al bicho. Cuanto menos falles, más puntos y más racha.</p>
+
+      <div class="pickers" id="categoryPicker" role="group" aria-label="Categoría de palabras"></div>
+
+      <div class="welcome__records">
+        <div class="record">
+          <span>Récord</span>
+          <strong id="welcomeBest">0</strong>
+        </div>
+        <div class="record">
+          <span>Mejor racha</span>
+          <strong id="welcomeBestStreak">0</strong>
+        </div>
+        <div class="record">
+          <span>Victorias</span>
+          <strong id="welcomeWins">0</strong>
+        </div>
+      </div>
+
+      <button class="btn btn--primary btn--wide" id="playBtn" type="button" autofocus>
+        <span>Jugar</span>
+        <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg>
+      </button>
+
+      <p class="dialog__note">Usa el teclado virtual o el físico. Pulsa <kbd>Enter</kbd> para empezar.</p>
+    </div>
+  </dialog>
+
+  <dialog class="dialog" id="winDialog" aria-labelledby="winTitle">
+    <div class="dialog__body dialog__body--result">
+      <p class="dialog__kicker dialog__kicker--good" id="winKicker">Palabra resuelta</p>
+      <h2 class="dialog__title" id="winTitle">¡Salvado!</h2>
+      <p class="dialog__word" id="winWord">PALABRA</p>
+      <ul class="breakdown" id="winBreakdown"></ul>
+      <p class="dialog__total">Total <strong id="winPoints">+0</strong></p>
+      <div class="dialog__actions">
+        <button class="btn btn--primary" id="nextWordBtn" type="button">
+          <span>Siguiente palabra</span>
+          <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg>
+        </button>
+        <button class="btn btn--ghost btn--compact" id="winNewGameBtn" type="button">Nueva partida</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="dialog" id="loseDialog" aria-labelledby="loseTitle">
+    <div class="dialog__body dialog__body--result">
+      <p class="dialog__kicker dialog__kicker--bad">Fin de la ronda</p>
+      <h2 class="dialog__title" id="loseTitle">¡Atrapado!</h2>
+      <p class="dialog__text">La palabra era</p>
+      <p class="dialog__word dialog__word--bad" id="loseWord">PALABRA</p>
+      <p class="dialog__text" id="loseMessage">La próxima es tuya.</p>
+      <div class="dialog__actions">
+        <button class="btn btn--primary" id="retryBtn" type="button">
+          <span>Otra palabra</span>
+          <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg>
+        </button>
+        <button class="btn btn--ghost btn--compact" id="loseNewGameBtn" type="button">Nueva partida</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="dialog dialog--confirm" id="confirmDialog" aria-labelledby="confirmTitle">
+    <div class="dialog__body">
+      <h2 class="dialog__title" id="confirmTitle">¿Nueva partida?</h2>
+      <p class="dialog__text">Se perderá el progreso de esta ronda y volverás al menú para elegir otra categoría. Los récords se conservan.</p>
+      <div class="dialog__actions">
+        <button class="btn btn--primary btn--compact" id="confirmNewBtn" type="button">Sí, volver al menú</button>
+        <button class="btn btn--ghost btn--compact" id="confirmCancelBtn" type="button" autofocus>Cancelar</button>
+      </div>
+    </div>
+  </dialog>
+
+  <p class="sr-only" id="srStatus" role="status" aria-live="polite"></p>
+</body>
+</html>

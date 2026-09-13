@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validar HTML y JavaScript
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Comprobar ficheros requeridos
+        run: |
+          for file in index.html styles.css script.js assets/cover.png; do
+            if [ ! -f "$file" ]; then
+              echo "::error::Falta el fichero requerido: $file"
+              exit 1
+            fi
+          done
+
+      - name: Validar sintaxis JavaScript
+        run: node --check script.js
+
+      - name: Validar HTML
+        run: npx --yes htmlhint@1 index.html
